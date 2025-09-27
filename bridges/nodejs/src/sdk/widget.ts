@@ -24,7 +24,7 @@ interface SendUtteranceOptions {
 }
 
 export interface WidgetEventMethod {
-  methodName: 'send_utterance' | 'run_skill_action'
+  methodName: 'send_utterance' | 'run_skill_action' | 'fetch_widget_data'
   methodParams:
     | SendUtteranceWidgetEventMethodParams
     | RunSkillActionWidgetEventMethodParams
@@ -32,6 +32,10 @@ export interface WidgetEventMethod {
 }
 export interface WidgetOptions<T = unknown> {
   wrapperProps?: Omit<WidgetWrapperProps, 'children'>
+  onFetch?: {
+    actionName: string
+    initialParams?: Record<string, unknown>
+  }
   onFetchAction?: string
   params: T
 }
@@ -40,6 +44,7 @@ export abstract class Widget<T = unknown> {
   public actionName: string
   public id: string
   public widget: string
+  public onFetch: WidgetOptions<T>['onFetch'] = undefined
   public onFetchAction: string | null = null
   public wrapperProps: WidgetOptions<T>['wrapperProps']
   public params: WidgetOptions<T>['params']
@@ -47,6 +52,10 @@ export abstract class Widget<T = unknown> {
   protected constructor(options: WidgetOptions<T>) {
     if (options?.wrapperProps) {
       this.wrapperProps = options.wrapperProps
+    }
+    if (options?.onFetch) {
+      this.onFetch = options.onFetch
+      this.onFetch.actionName = `${INTENT_OBJECT.domain}:${INTENT_OBJECT.skill}:${this.onFetch.actionName}`
     }
     if (options?.onFetchAction) {
       this.onFetchAction = `${INTENT_OBJECT.domain}:${INTENT_OBJECT.skill}:${options.onFetchAction}`
@@ -101,6 +110,26 @@ export abstract class Widget<T = unknown> {
       methodParams: {
         actionName,
         params
+      }
+    }
+  }
+
+  /**
+   * Indicate the core to fetch widget data
+   * @param actionName The name of the action
+   * @param dataToSet The data to set
+   * @example fetchWidgetData('music_audio:player:next', { provider: 'Spotify' })
+   */
+  protected fetchWidgetData(
+    actionName: string,
+    dataToSet: string[]
+  ): WidgetEventMethod {
+    return {
+      methodName: 'fetch_widget_data',
+      methodParams: {
+        actionName,
+        widgetId: this.id,
+        dataToSet
       }
     }
   }

@@ -23,6 +23,8 @@ import {
 import { LogHelper } from '@/helpers/log-helper'
 import { LangHelper } from '@/helpers/lang-helper'
 import { Telemetry } from '@/telemetry'
+import { SkillDomainHelper } from '@/helpers/skill-domain-helper'
+import { DEFAULT_NLU_RESULT } from '@/core/nlu'
 
 interface HotwordDataEvent {
   hotword: string
@@ -214,6 +216,52 @@ export default class SocketServer {
                     action_params: params
                   }
                 )
+              } else if (method.methodName === 'fetch_widget_data') {
+                const { actionName, widgetId, params } = method.methodParams
+                const [domain, skill, action] = (actionName as string).split(':')
+
+                // Do not return any speech and new widget
+                BRAIN.isMuted = true
+                await BRAIN.execute({
+                  ...DEFAULT_NLU_RESULT,
+                  currentEntities: [
+                    {
+                      start: 0,
+                      end: (widgetId as string).length - 1,
+                      len: (widgetId as string).length,
+                      levenshtein: 0,
+                      accuracy: 1,
+                      entity: 'widgetid',
+                      type: 'enum',
+                      option: widgetId,
+                      sourceText: widgetId,
+                      utteranceText: widgetId,
+                      resolution: {
+                        value: widgetId
+                      }
+                    }
+                  ],
+                  skillConfigPath: SkillDomainHelper.getSkillConfigPath(
+                    domain,
+                    skill,
+                    BRAIN.lang
+                  ),
+                  classification: {
+                    domain,
+                    skill,
+                    action,
+                    confidence: 1
+                  },
+                  ...params
+                })
+
+                const parsedOutput = JSON.parse(BRAIN.skillOutput)
+
+                if (parsedOutput.output.widget) {
+                  this.socket?.emit('widget-data-fetched', {
+                    widget: parsedOutput.output.widget
+                  })
+                }
               }
             } catch (e) {
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment

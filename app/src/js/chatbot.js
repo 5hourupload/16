@@ -18,6 +18,24 @@ export default class Chatbot {
     this.noBubbleMessage = document.querySelector('#no-bubble')
     this.bubbles = localStorage.getItem('bubbles')
     this.parsedBubbles = JSON.parse(this.bubbles)
+
+    this.socket.on('widget-data-fetched', (event) => {
+      const { widget } = event
+      const widgetContainer = document.querySelector(
+        `[data-widget-id="${widget.id}"]`
+      )
+
+      if (widgetContainer) {
+        const root = createRoot(widgetContainer)
+        const reactNode = renderAuroraComponent(
+          this.socket,
+          widget.componentTree,
+          widget.supportedEvents
+        )
+
+        root.render(reactNode)
+      }
+    })
   }
 
   async init() {
