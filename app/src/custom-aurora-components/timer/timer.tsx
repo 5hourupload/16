@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { CircularProgress, Flexbox, Text } from '@leon-ai/aurora'
+import {
+  WidgetWrapper,
+  CircularProgress,
+  Flexbox,
+  Text,
+  IconButton
+} from '@leon-ai-ai/aurora'
 
 interface TimerProps {
   initialTime: number
+  initialProgress: number
   interval: number
   totalTimeContent: string
-  initialProgress?: number
-  onEnd?: () => void
+  onEnd: () => void
+  onCheck: () => void
 }
 
 function formatTime(seconds: number): string {
@@ -19,20 +26,14 @@ function formatTime(seconds: number): string {
   return `${formattedMinutes}:${formattedSeconds}`
 }
 
-export function Timer({
-  initialTime,
-  initialProgress,
-  interval,
-  totalTimeContent,
-  onEnd
-}: TimerProps) {
-  const [progress, setProgress] = useState(initialProgress || 0)
-  const [timeLeft, setTimeLeft] = useState(initialTime)
+export const Timer = (props: TimerProps): JSX.Element => {
+  const [progress, setProgress] = useState(props.initialProgress || 0)
+  const [timeLeft, setTimeLeft] = useState(props.initialTime)
 
   useEffect(() => {
-    setTimeLeft(initialTime)
+    setTimeLeft(props.initialTime)
     setProgress(progress)
-  }, [initialTime])
+  }, [props.initialTime])
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -43,28 +44,42 @@ export function Timer({
       setTimeLeft((prevTime) => {
         const newTime = prevTime - 1
 
-        if (newTime <= 0 && onEnd) {
-          onEnd()
+        if (newTime <= 0 && props.onEnd) {
+          props.onEnd()
         }
 
         return newTime
       })
-      setProgress((prevProgress) => prevProgress + 100 / initialTime)
-    }, interval)
+      setProgress((prevProgress) => prevProgress + 100 / props.initialTime)
+    }, props.interval)
 
     return () => clearInterval(timer)
-  }, [initialTime, interval, timeLeft])
+  }, [props.initialTime, props.interval, timeLeft])
 
   return (
-    <CircularProgress value={progress} size="lg">
-      <Flexbox gap="xs" alignItems="center" justifyContent="center">
+    <WidgetWrapper>
+      <Flexbox
+        gap="xs"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <CircularProgress value={progress} />
+        <IconButton
+          icon="refresh"
+          aria-label="Refresh"
+          tooltip="Refresh"
+          variant="ghost"
+          onClick={props.onCheck}
+        />
+      </Flexbox>
+      <Flexbox direction="column" gap="xs" alignItems="center">
         <Text fontSize="lg" fontWeight="semi-bold">
           {formatTime(timeLeft)}
         </Text>
         <Text fontSize="xs" secondary>
-          {totalTimeContent}
+          {props.totalTimeContent}
         </Text>
       </Flexbox>
-    </CircularProgress>
+    </WidgetWrapper>
   )
 }

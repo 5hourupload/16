@@ -7,6 +7,7 @@ interface TimerProps {
   interval: number
   totalTimeContent: string
   onEnd?: () => WidgetEventMethod
+  onCheck?: () => WidgetEventMethod
 }
 
 export class Timer extends WidgetComponent<TimerProps> {

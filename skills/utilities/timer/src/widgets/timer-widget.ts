@@ -13,7 +13,15 @@ interface Params {
 
 export class TimerWidget extends Widget<Params> {
   constructor(options: WidgetOptions<Params>) {
-    super(options)
+    super({
+      ...options,
+      onFetch: {
+        actionName: 'check_timer',
+        initialParams: {
+          id: options.params.id
+        }
+      }
+    })
 
     if (options.params.id) {
       this.id = options.params.id
@@ -52,6 +60,9 @@ export class TimerWidget extends Widget<Params> {
         return this.sendUtterance('times_up', {
           from: 'leon'
         })
+      },
+      onCheck: (): WidgetEventMethod => {
+        return this.fetchWidgetData(this.onFetch.actionName, [])
       }
     })
   }

@@ -45,6 +45,7 @@ class WidgetEventMethod(TypedDict):
 class WidgetOptions(Generic[T]):
     wrapper_props: dict[str, Any] = None
     params: T = None
+    on_fetch: Optional[Dict[str, Any]] = None
     on_fetch_action: Optional[str] = None
 
 
@@ -55,6 +56,10 @@ class Widget(ABC, Generic[T]):
         self.id = f"{self.widget.lower()}-{random.randint(100000, 999999)}"
         self.wrapper_props = options.wrapper_props
         self.params = options.params
+        self.on_fetch = None
+        if options.on_fetch:
+            self.on_fetch = options.on_fetch
+            self.on_fetch['actionName'] = f"{INTENT_OBJECT['domain']}:{INTENT_OBJECT['skill']}:{self.on_fetch['actionName']}"
         self.on_fetch_action = f"{INTENT_OBJECT['domain']}:{INTENT_OBJECT['skill']}:{options.on_fetch_action}" \
             if options.on_fetch_action else None
 
@@ -90,6 +95,21 @@ class Widget(ABC, Generic[T]):
             methodParams={
                 'actionName': action_name,
                 'params': params
+            }
+        )
+
+    def fetch_widget_data(self, action_name: str, data_to_set: list[str]) -> WidgetEventMethod:
+        """
+        Indicate the core to fetch widget data
+        :param action_name: The name of the action
+        :param data_to_set: The data to set
+        """
+        return WidgetEventMethod(
+            methodName='fetch_widget_data',
+            methodParams={
+                'actionName': action_name,
+                'widgetId': self.id,
+                'dataToSet': data_to_set
             }
         )
 

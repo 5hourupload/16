@@ -15,10 +15,10 @@ import { LogHelper } from '@/helpers/log-helper'
 import { DateHelper } from '@/helpers/date-helper'
 import { corsMidd } from '@/core/http-server/plugins/cors'
 import { otherMidd } from '@/core/http-server/plugins/other'
-import { infoPlugin } from '@/core/http-server/api/info'
+import { getInfo } from '@/core/http-server/api/info'
 import { llmInferencePlugin } from '@/core/http-server/api/llm-inference'
 import { runActionPlugin } from '@/core/http-server/api/run-action'
-import { fetchWidgetPlugin } from '@/core/http-server/api/fetch-widget'
+import { getFetchWidget, postFetchWidget } from '@/core/http-server/api/fetch-widget'
 import { keyMidd } from '@/core/http-server/plugins/key'
 import { utterancePlugin } from '@/core/http-server/api/utterance'
 import { LLM_MANAGER, PERSONA } from '@/core'
@@ -99,8 +99,9 @@ export default class HTTPServer {
     })
 
     this.fastify.register(runActionPlugin, { apiVersion: API_VERSION })
-    this.fastify.register(fetchWidgetPlugin, { apiVersion: API_VERSION })
-    this.fastify.register(infoPlugin, { apiVersion: API_VERSION })
+    this.fastify.register(getFetchWidget, { apiVersion: API_VERSION })
+    this.fastify.register(postFetchWidget, { apiVersion: API_VERSION })
+    this.fastify.register(getInfo, { apiVersion: API_VERSION })
     this.fastify.register(llmInferencePlugin, { apiVersion: API_VERSION })
 
     if (HAS_OVER_HTTP) {
